@@ -32,7 +32,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
     std::normal_distribution<double> N_y(y, std[1]);
     std::normal_distribution<double> N_theta(theta, std[3]);
 
-    for (int i = 0; i < num_particles; ++i) {
+    for (int i = 0; i < num_particles; i++) {
         Particle new_particle;
         new_particle.id = i;
         new_particle.x = N_x(gen);
@@ -95,8 +95,9 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
     for (int i = 0; i < observations.size(); i++) {
 
         // leave loop, if no landmarks in proximity.
-        if (predicted.size() == 0) break;
-        // for each observation, run over each landmark close enough to the vehicle
+        if (predicted.empty()) break;
+
+
 
         // initialize closest landmark id and distance placeholders
         int closest_predicted_landmark_id = 0;
@@ -104,20 +105,21 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 
 
 
+        // for each observation, run over each landmark close enough to the vehicle
         for (int k = 0; k < predicted.size(); k++) {
-            // init best fit = prediction one, but only if not set
-            // calculate the distance from observation and distance. if it is closer than all distances before, make the observation the best fit
-
             double distance;
 
-            distance = dist(predicted[k].x , observations[i].x, predicted[k].y , observations[i].y);
+            // calculate the distance from observation and distance. if it is closer than all distances before, make the observation the best fit
+            distance = dist(predicted[k].x, predicted[k].y, observations[i].x, observations[i].y);
 
 
+            // init best fit = prediction one, but only if not set
             if (k == 0){
                 closest_predicted_landmark_id = predicted[k].id;
                 closest_predicted_landmark_distance = distance;
             }
-            else if (closest_predicted_landmark_distance < distance ){
+            else if (closest_predicted_landmark_distance > distance ){
+                closest_predicted_landmark_id = predicted[k].id;
                 closest_predicted_landmark_distance =  distance;
             }
 
@@ -131,7 +133,7 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                                    const std::vector<LandmarkObs> &observations, const Map &map_landmarks) {
-    // ∆ Update the weights of each particle using a mult-variate Gaussian distribution. You can read
+    //  Update the weights of each particle using a mult-variate Gaussian distribution. You can read
     //   more about this distribution here: https://en.wikipedia.org/wiki/Multivariate_normal_distribution
     // NOTE: The observations are given in the VEHICLE'S coordinate system. Your particles are located
     //   according to the MAP'S coordinate system. You will need to transform between the two systems.
@@ -155,8 +157,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
             double distance;
 
-            distance = dist(map_landmarks.landmark_list[k].x_f, particles[p].x,
-                            map_landmarks.landmark_list[k].y_f, particles[p].y);
+            distance = dist(map_landmarks.landmark_list[k].x_f, map_landmarks.landmark_list[k].y_f,
+                            particles[p].x, particles[p].y);
 
             if (distance <= sensor_range){
                 LandmarkObs temp;
@@ -204,8 +206,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
             int associated_prediction = transformed_observations[t].id;
 
-            double predicted_x;
-            double predicted_y;
+            double predicted_x = 0.0;
+            double predicted_y = 0.0;
 
             for (unsigned int k = 0; k < predicted_lm.size(); k++) {
                 if (predicted_lm[k].id == associated_prediction) {
