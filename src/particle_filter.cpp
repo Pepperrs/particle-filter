@@ -95,7 +95,7 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
     for (int i = 0; i < observations.size(); i++) {
 
         // leave loop, if no landmarks in proximity.
-        if (predicted.size() == 0) break;
+        if (predicted.empty()) break;
         // for each observation, run over each landmark close enough to the vehicle
 
         // initialize closest landmark id and distance placeholders
@@ -110,7 +110,7 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 
             double distance;
 
-            distance = dist(predicted[k].x , observations[i].x, predicted[k].y , observations[i].y);
+            distance = dist(predicted[k].x, predicted[k].y, observations[i].x, observations[i].y);
 
 
             if (k == 0){
@@ -155,8 +155,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
             double distance;
 
-            distance = dist(map_landmarks.landmark_list[k].x_f, particles[p].x,
-                            map_landmarks.landmark_list[k].y_f, particles[p].y);
+            distance = dist(map_landmarks.landmark_list[k].x_f, map_landmarks.landmark_list[k].y_f,
+                            particles[p].x, particles[p].y);
 
             if (distance <= sensor_range){
                 LandmarkObs temp;
@@ -204,8 +204,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
             int associated_prediction = transformed_observations[t].id;
 
-            double predicted_x;
-            double predicted_y;
+            double predicted_x = 0.0;
+            double predicted_y = 0.0;
 
             for (unsigned int k = 0; k < predicted_lm.size(); k++) {
                 if (predicted_lm[k].id == associated_prediction) {
