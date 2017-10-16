@@ -123,9 +123,6 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 
 
         }
-        //prediction or observation .id = id of best fit
-
-
         observations[i].id = closest_predicted_landmark_id;
     }
 
@@ -202,15 +199,31 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
         for (int t = 0; t < transformed_observations.size(); t++) {
 
-            gaussians_observations[t] = 0; //todo calculate a gaussian and save in this array.
+            double observed_x = transformed_observations[t].x;
+            double observed_y = transformed_observations[t].y;
+
+            int associated_prediction = transformed_observations[t].id;
+
+            double predicted_x;
+            double predicted_y;
+
+            for (unsigned int k = 0; k < predicted_lm.size(); k++) {
+                if (predicted_lm[k].id == associated_prediction) {
+                    predicted_x = predicted_lm[k].x;
+                    predicted_y = predicted_lm[k].y;
+                }
+            }
+
 
             //double multiplier = 1.0/(2*M_PI*0.3*0.3);
-            double cov_x = pow(0.3, 2.0);
-            double cov_y = pow(0.3, 2.0);
+            double cov_x = pow(std_landmark[0], 2.0);
+            double cov_y = pow(std_landmark[1], 2.0);
+
+
 
             double observation_prob_i =
-                    exp(-pow(particles[p].x - transformed_observations[t].x, 2.0)
-                        /(2.0*cov_x) - pow(particles[p].y - transformed_observations[t].y, 2.0)/(2.0*cov_y));
+                    exp(-pow(predicted_x - observed_x, 2.0)
+                        /(2.0*cov_x) - pow(predicted_y - observed_y, 2.0)/(2.0*cov_y));
             gaussians_observations[t] = observation_prob_i;
         }
 
@@ -222,6 +235,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
         }
 
+        weights[p] = particles[p].weight;
 
     }
 }
