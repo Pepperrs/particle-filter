@@ -92,6 +92,52 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
     // NOTE: this method will NOT be called by the grading code. But you will probably find it useful to
     //   implement this method and use it as a helper during the updateWeights phase.
 
+
+    for (int i = 0; i < observations.size(); i++) {
+
+        // leave loop, if no landmarks in proximity.
+        if (predicted.size() == 0) break;
+        // for each observation, run over each landmark close enough to the vehicle
+
+        // initialize closest landmark id and distance placeholders
+        int closest_predicted_landmark_id = nullptr;
+        double closest_predicted_landmark_distance = nullptr;
+
+
+
+        for (int k = 0; k < predicted.size(); k++) {
+            // init best fit = prediction one, but only if not set
+            // calculate the distance from observation and distance. if it is closer than all distances before, make the observation the best fit
+
+
+            double x_difference;
+            double y_difference;
+            double distance;
+
+
+            x_difference = predicted[k].x - observations[i].x;
+            y_difference = predicted[k].y - observations[i].y;
+
+            distance = sqrt(x_difference*x_difference + y_difference*y_difference);
+
+
+            if (k == 0){
+                closest_predicted_landmark_id = predicted[k].id;
+                closest_predicted_landmark_distance = distance;
+            }
+            else if (closest_predicted_landmark_distance > distance ){
+                closest_predicted_landmark_distance =  distance;
+            }
+
+
+        }
+        //prediction or observation .id = id of best fit
+
+
+        observations[i].id = closest_predicted_landmark_id;
+    }
+
+
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
@@ -135,8 +181,6 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                 predicted_lm.push_back(temp);
             }
         }
-
-
 
 
         //2. Convert all observations from local to global frame, call this `transformed_obs`
