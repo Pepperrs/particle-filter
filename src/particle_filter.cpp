@@ -87,7 +87,6 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 }
 
 void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs> &observations) {
-    // TODO: Find the predicted measurement that is closest to each observed measurement and assign the
     //   observed measurement to this particular landmark.
     // NOTE: this method will NOT be called by the grading code. But you will probably find it useful to
     //   implement this method and use it as a helper during the updateWeights phase.
@@ -100,8 +99,8 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
         // for each observation, run over each landmark close enough to the vehicle
 
         // initialize closest landmark id and distance placeholders
-        int closest_predicted_landmark_id = nullptr;
-        double closest_predicted_landmark_distance = nullptr;
+        int closest_predicted_landmark_id = 0;
+        double closest_predicted_landmark_distance = 0;
 
 
 
@@ -109,23 +108,16 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
             // init best fit = prediction one, but only if not set
             // calculate the distance from observation and distance. if it is closer than all distances before, make the observation the best fit
 
-
-            double x_difference;
-            double y_difference;
             double distance;
 
-
-            x_difference = predicted[k].x - observations[i].x;
-            y_difference = predicted[k].y - observations[i].y;
-
-            distance = sqrt(x_difference*x_difference + y_difference*y_difference);
+            distance = dist(predicted[k].x , observations[i].x, predicted[k].y , observations[i].y);
 
 
             if (k == 0){
                 closest_predicted_landmark_id = predicted[k].id;
                 closest_predicted_landmark_distance = distance;
             }
-            else if (closest_predicted_landmark_distance > distance ){
+            else if (closest_predicted_landmark_distance < distance ){
                 closest_predicted_landmark_distance =  distance;
             }
 
@@ -142,7 +134,7 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                                    const std::vector<LandmarkObs> &observations, const Map &map_landmarks) {
-    // TODO: Update the weights of each particle using a mult-variate Gaussian distribution. You can read
+    // ∆ Update the weights of each particle using a mult-variate Gaussian distribution. You can read
     //   more about this distribution here: https://en.wikipedia.org/wiki/Multivariate_normal_distribution
     // NOTE: The observations are given in the VEHICLE'S coordinate system. Your particles are located
     //   according to the MAP'S coordinate system. You will need to transform between the two systems.
@@ -164,15 +156,11 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
         for (int k = 0; k < map_landmarks.landmark_list.size(); k++) {
 
-            double x_difference;
-            double y_difference;
             double distance;
 
+            distance = dist(map_landmarks.landmark_list[k].x_f, particles[p].x,
+                            map_landmarks.landmark_list[k].y_f, particles[p].y);
 
-            x_difference = map_landmarks.landmark_list[k].x_f - particles[p].x;
-            y_difference = map_landmarks.landmark_list[k].y_f - particles[p].y;
-
-            distance = sqrt(x_difference*x_difference + y_difference*y_difference);
             if (distance <= sensor_range){
                 LandmarkObs temp;
                 temp.x = map_landmarks.landmark_list[k].x_f;
@@ -206,10 +194,34 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
         //3. Perform `dataAssociation`. This will put the index of the `predicted_lm` nearest to each `transformed_obs` in the `id` field of the `transformed_obs` element.
 
+        dataAssociation(predicted_lm, transformed_observations);
 
         //4. Loop through all the `transformed_obs`. Use the saved index in the `id` to find the associated landmark and compute the gaussian.
 
+        double gaussians_observations [transformed_observations.size()];
+
+        for (int t = 0; t < transformed_observations.size(); t++) {
+
+            gaussians_observations[t] = 0; //todo calculate a gaussian and save in this array.
+
+            //double multiplier = 1.0/(2*M_PI*0.3*0.3);
+            double cov_x = pow(0.3, 2.0);
+            double cov_y = pow(0.3, 2.0);
+
+            double observation_prob_i =
+                    exp(-pow(particles[p].x - transformed_observations[t].x, 2.0)
+                        /(2.0*cov_x) - pow(particles[p].y - transformed_observations[t].y, 2.0)/(2.0*cov_y));
+            gaussians_observations[t] = observation_prob_i;
+        }
+
+
         //5. Multiply all the gaussian values together to get total probability of particle (the weight). (edited)
+
+        for (int g = 0; g < sizeof(gaussians_observations); ++g) {
+            particles[p].weight *= gaussians_observations[g];
+
+        }
+
 
     }
 }
