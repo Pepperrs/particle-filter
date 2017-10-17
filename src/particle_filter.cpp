@@ -55,6 +55,10 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 
     std::default_random_engine gen;
 
+    std::normal_distribution<double> N_x(0, std_pos[0]);
+    std::normal_distribution<double> N_y(0, std_pos[1]);
+    std::normal_distribution<double> N_theta(0, std_pos[3]);
+
     for (int i = 0; i < num_particles; i++) {
 
         if (yaw_rate == 0) {
@@ -66,11 +70,6 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
         }
 
         particles[i].theta += yaw_rate * delta_t;
-
-
-        std::normal_distribution<double> N_x(0, std_pos[0]);
-        std::normal_distribution<double> N_y(0, std_pos[1]);
-        std::normal_distribution<double> N_theta(0, std_pos[3]);
 
         // add random Gaussian noise
         particles[i].x += N_x(gen);
