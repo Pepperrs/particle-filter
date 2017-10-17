@@ -77,9 +77,6 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
         particles[i].y += N_y(gen);
         particles[i].theta += N_theta(gen);
 
-        cout<< "Particle Nr " << particles[i].id << " x: " << particles[i].x << " y: " << particles[i].y << " theta: "
-            << particles[i].theta << endl;
-
     }
 
 }
@@ -167,7 +164,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         }
 
 
-        //2. Convert all observations from local to global frame, call this `transformed_obs`
+        //2. Convert all observations from ego to global frame, call this `transformed_obs`
         vector<int> associations;
         vector<double> sense_x;
         vector<double> sense_y;
@@ -193,7 +190,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
         //4. Loop through all the `transformed_obs`. Use the saved index in the `id` to find the associated landmark and compute the gaussian.
 
-        double gaussians_observations[transformed_observations.size()];
+
+        particles[p].weight = 1;
 
         for (int t = 0; t < transformed_observations.size(); t++) {
 
@@ -216,20 +214,16 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                     1 / (2 * M_PI * std_landmark[0] * std_landmark[1])
                     * exp(-(pow(predicted_x - observed_x, 2) / (2 * std_landmark[0] * std_landmark[0])
                             + pow(predicted_y - observed_y, 2) / (2 * std_landmark[1] * std_landmark[1])));
-            gaussians_observations[t] = observation_prob_i;
+
+
+            //5. Multiply all the gaussian values together to get total probability of particle (the weight). (edited)
+
+            particles[p].weight *= observation_prob_i;
         }
 
+        cout << "particle Nr "<< p <<" weight = " << particles[p].weight << endl;
 
-        //5. Multiply all the gaussian values together to get total probability of particle (the weight). (edited)
-
-        particles[p].weight = 1;
-        for (int g = 0; g < sizeof(gaussians_observations); g++) {
-            particles[p].weight *= gaussians_observations[g];
-
-        }
-
-//        cout << "particle Nr "<< p <<" weight = " << particles[p].weight << endl;
-//        weights[p] = particles[p].weight;
+        weights[p] = particles[p].weight;
 
     }
 }
