@@ -94,8 +94,8 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 
 
         // initialize closest landmark id and distance placeholders
-        int closest_predicted_landmark_id = 0;
-        double closest_predicted_landmark_distance = 0;
+        int closest_predicted_landmark_id = -1;
+        double closest_predicted_landmark_distance = 999999999999.0;
 
 
 
@@ -118,6 +118,7 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 
 
         }
+        //cout << "Closest Landmark = " << closest_predicted_landmark_id <<" mit einer entfernung von "<< closest_predicted_landmark_distance <<endl;
         observations[i].id = closest_predicted_landmark_id;
     }
 
@@ -176,8 +177,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
             obs = observations[i];
 
             // homogenious transformation
-            transformed_obs.x = particles[p].x * (obs.x * cos(particles[p].theta) - obs.y * sin(particles[p].theta));
-            transformed_obs.y = particles[p].y * (obs.x * cos(particles[p].theta) + obs.y * sin(particles[p].theta));
+            transformed_obs.x = particles[p].x + (obs.x * cos(particles[p].theta) - obs.y * sin(particles[p].theta));
+            transformed_obs.y = particles[p].y + (obs.x * sin(particles[p].theta) + obs.y * cos(particles[p].theta));
             transformed_observations.push_back(transformed_obs);
 
         }
@@ -217,11 +218,14 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
             //5. Multiply all the gaussian values together to get total probability of particle (the weight). (edited)
 
-            particles[p].weight *= observation_prob_i;
+            if (observation_prob_i>0){
+                particles[p].weight *= observation_prob_i;
+            }
         }
 
-        cout << "particle Nr "<< p <<" weight = " << particles[p].weight << endl;
+        //cout << "particle Nr "<< p <<" weight = " << particles[p].weight << endl;
 
+        particles[p] = SetAssociations(particles[p], associations, sense_x, sense_y);
         weights[p] = particles[p].weight;
 
     }
